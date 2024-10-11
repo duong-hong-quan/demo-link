@@ -1,7 +1,9 @@
 import "./App.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function App() {
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
   useEffect(() => {
     const detectOSAndRedirect = () => {
       const userAgent = navigator.userAgent;
@@ -13,49 +15,60 @@ function App() {
         "https://play.google.com/store/apps/details?id=hk.alipay.wallet&hl=en-GB";
       const fallbackLink = "https://campaign.yas.io/yas_alipayhk_zh";
 
-      // Try to open the app first
-      const openApp = () => {
-        // Create and click a hidden anchor element for the deep link
-        const linkElement = document.createElement("a");
-        linkElement.href = alipayDeepLink;
-        document.body.appendChild(linkElement);
-        linkElement.click();
-        document.body.removeChild(linkElement);
-      };
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+      const isAndroid = /Android/.test(userAgent);
 
-      // Function to handle store redirects
-      const redirectToStore = () => {
-        if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+      // Function to handle iOS deep linking
+      const handleIOSRedirect = () => {
+        setIsRedirecting(true);
+
+        // Create an iframe and hide it
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.style.width = "0";
+        iframe.style.height = "0";
+        iframe.src = alipayDeepLink;
+
+        // Insert iframe to trigger deep link
+        document.body.appendChild(iframe);
+
+        // Set timeout for store fallback
+        setTimeout(() => {
+          iframe.remove();
           window.location.href = appStoreLink;
-        } else if (/Android/.test(userAgent)) {
-          window.location.href = playStoreLink;
-        } else {
-          window.location.href = fallbackLink;
-        }
+        }, 2000);
       };
 
-      // First, try to open the app
-      openApp();
+      // Function to handle Android deep linking
+      const handleAndroidRedirect = () => {
+        setIsRedirecting(true);
+        window.location.href = alipayDeepLink;
 
-      // Set up detection for whether app was successfully opened
-      const timeoutDuration = 2000; // 2 seconds
-      const appOpenedTimeout = setTimeout(() => {
-        // If we're still here after the timeout, the app probably isn't installed
-        redirectToStore();
-      }, timeoutDuration);
+        setTimeout(() => {
+          window.location.href = playStoreLink;
+        }, 2000);
+      };
 
-      // Listen for visibility change to clear timeout if app is opened
+      // Handle redirects based on OS
+      if (isIOS) {
+        handleIOSRedirect();
+      } else if (isAndroid) {
+        handleAndroidRedirect();
+      } else {
+        window.location.href = fallbackLink;
+      }
+
+      // Listen for visibility change
       const handleVisibilityChange = () => {
         if (document.hidden) {
-          clearTimeout(appOpenedTimeout);
+          // App was successfully opened
+          setIsRedirecting(false);
         }
       };
 
       document.addEventListener("visibilitychange", handleVisibilityChange);
 
-      // Cleanup function
       return () => {
-        clearTimeout(appOpenedTimeout);
         document.removeEventListener(
           "visibilitychange",
           handleVisibilityChange
@@ -64,17 +77,27 @@ function App() {
     };
 
     // Start the detection and redirect process
-    detectOSAndRedirect();
+    // Small delay to ensure everything is ready
+    const initTimeout = setTimeout(() => {
+      detectOSAndRedirect();
+    }, 100);
+
+    return () => {
+      clearTimeout(initTimeout);
+    };
   }, []);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
       <h1 className="text-2xl font-bold mb-4">Welcome to Our App!</h1>
-      <p className="mb-2">
-        If you have AlipayHK installed, you will be redirected shortly.
-      </p>
-      <p className="mb-4">If not, you'll be redirected to download the app.</p>
-      <div className="animate-pulse">Loading...</div>
+      {isRedirecting ? (
+        <div className="space-y-4">
+          <p>Opening AlipayHK...</p>
+          <div className="animate-pulse">Please wait...</div>
+        </div>
+      ) : (
+        <p>Initializing...</p>
+      )}
     </div>
   );
 }
