@@ -21,9 +21,7 @@ function App() {
           "https://play.google.com/store/apps/details?id=hk.alipay.wallet&hl=en-GB"; // Replace with actual link
       } else {
         // Fallback for unsupported OS
-        alert(
-          "Unsupported OS. Please use a mobile device with iOS or Android."
-        );
+        window.location.href = "https://campaign.yas.io/yas_alipayhk_zh";
       }
     };
 
