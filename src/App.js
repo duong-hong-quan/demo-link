@@ -12,13 +12,13 @@ function App() {
       if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
         // Redirect to the App Store
         window.location.href =
-          "https://apps.apple.com/us/app/alipay-simplify-your-life/id333206289"; // Replace with actual link
+          "https://apps.apple.com/us/app/alipayhk/id1210638245"; // Replace with actual link
       }
       // Check for Android
       else if (/Android/.test(userAgent)) {
         // Redirect to Google Play
         window.location.href =
-          "https://play.google.com/store/apps/details?id=hk.alipay.wallet&hl=vi"; // Replace with actual link
+          "https://play.google.com/store/apps/details?id=hk.alipay.wallet&hl=en-GB"; // Replace with actual link
       } else {
         // Fallback for unsupported OS
         alert(
